@@ -1,7 +1,8 @@
-package com.example.musicplayer
+package com.example.musicplayer.activities
 
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import com.example.musicplayer.R
 
 class CurrentSongPlayingActivity : AppCompatActivity() {
 
