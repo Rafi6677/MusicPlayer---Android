@@ -11,11 +11,11 @@ import com.example.musicplayer.model.Song
 
 class SongAdapter(context: Context, val songs: ArrayList<Song>): RecyclerView.Adapter<SongAdapter.ViewHolder>() {
 
-   /* private var activityItem: ItemClicked = context as ItemClicked
+    private var activityItem: ItemClicked = context as ItemClicked
 
     interface ItemClicked {
         fun onItemClicked(index: Int)
-    }*/
+    }
 
     inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         var songName: TextView = itemView.findViewById(R.id.songName_TextView)
@@ -23,7 +23,7 @@ class SongAdapter(context: Context, val songs: ArrayList<Song>): RecyclerView.Ad
 
         init {
             itemView.setOnClickListener {
-                //activityItem.onItemClicked(songs.indexOf(it.tag as Song))
+                activityItem.onItemClicked(songs.indexOf(it.tag as Song))
             }
         }
     }

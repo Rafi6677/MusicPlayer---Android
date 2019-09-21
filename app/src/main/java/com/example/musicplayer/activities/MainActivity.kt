@@ -1,6 +1,8 @@
 package com.example.musicplayer.activities
 
 import android.Manifest
+import android.content.Intent
+import android.content.ServiceConnection
 import android.content.pm.PackageManager
 import android.database.Cursor
 import android.net.Uri
@@ -15,15 +17,31 @@ import android.support.v7.widget.RecyclerView
 import android.widget.LinearLayout
 import android.widget.Toast
 import com.example.musicplayer.R
+import com.example.musicplayer.model.MusicService
 import com.example.musicplayer.model.Song
 import com.example.musicplayer.viewmodel.SongAdapter
 import kotlinx.android.synthetic.main.activity_main.*
+import android.content.ComponentName
+import android.content.Context
+import com.example.musicplayer.model.MusicService.MusicBinder
+import android.os.IBinder
+import android.support.v4.app.SupportActivity
+import android.support.v4.app.SupportActivity.ExtraData
+import android.support.v4.content.ContextCompat.getSystemService
+import android.icu.lang.UCharacter.GraphemeClusterBreak.T
+import android.view.Menu
+import android.view.MenuItem
 
-class MainActivity : AppCompatActivity() {
+
+class MainActivity : AppCompatActivity(), SongAdapter.ItemClicked {
 
     private var songs: ArrayList<Song> = ArrayList()
     private lateinit var songAdapter: SongAdapter
     private lateinit var layoutManager: RecyclerView.LayoutManager
+
+    private var musicService: MusicService ?= null
+    private var playIntent: Intent ?= null
+    private var musicBound: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -38,6 +56,53 @@ class MainActivity : AppCompatActivity() {
         songList_RecyclerView.adapter = songAdapter
     }
 
+    override fun onStart() {
+        super.onStart()
+
+        if (playIntent == null) {
+            playIntent = Intent(this, MusicService::class.java)
+            bindService(playIntent, musicConnection, Context.BIND_AUTO_CREATE)
+            startService(playIntent)
+        }
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.menu_main, menu)
+
+        return super.onCreateOptionsMenu(menu)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem?): Boolean {
+        when (item?.itemId) {
+            R.id.action_end -> {
+                stopService(playIntent)
+                musicService = null
+                System.exit(0)
+            }
+        }
+
+        return super.onOptionsItemSelected(item)
+    }
+
+    private val musicConnection = object : ServiceConnection {
+
+        override fun onServiceConnected(name: ComponentName, service: IBinder) {
+            val binder = service as MusicBinder
+
+            musicService = binder.service
+            musicService!!.setSongList(songs)
+            musicBound = true
+        }
+
+        override fun onServiceDisconnected(name: ComponentName) {
+            musicBound = false
+        }
+    }
+
+    override fun onItemClicked(index: Int) {
+        musicService!!.setSong(index)
+        musicService!!.playSong()
+    }
 
     private fun checkPermission() {
         if (Build.VERSION.SDK_INT >= 23) {
@@ -90,5 +155,11 @@ class MainActivity : AppCompatActivity() {
         songsButton.text = "Utwory (${songs.size})"
 
         songAdapter = SongAdapter(this, songs)
+    }
+
+    override fun onDestroy() {
+        stopService(playIntent)
+        musicService = null
+        super.onDestroy()
     }
 }
