@@ -17,29 +17,28 @@ import android.support.v7.widget.RecyclerView
 import android.widget.LinearLayout
 import android.widget.Toast
 import com.example.musicplayer.R
-import com.example.musicplayer.model.MusicService
+import com.example.musicplayer.controllers.MusicService
 import com.example.musicplayer.model.Song
 import com.example.musicplayer.viewmodel.SongAdapter
 import kotlinx.android.synthetic.main.activity_main.*
 import android.content.ComponentName
 import android.content.Context
-import com.example.musicplayer.model.MusicService.MusicBinder
+import com.example.musicplayer.controllers.MusicService.MusicBinder
 import android.os.IBinder
-import android.support.v4.app.SupportActivity
-import android.support.v4.app.SupportActivity.ExtraData
-import android.support.v4.content.ContextCompat.getSystemService
-import android.icu.lang.UCharacter.GraphemeClusterBreak.T
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
+import android.widget.MediaController
+import com.example.musicplayer.controllers.MusicController
 
-
-class MainActivity : AppCompatActivity(), SongAdapter.ItemClicked {
+class MainActivity : AppCompatActivity(), MediaController.MediaPlayerControl, SongAdapter.ItemClicked {
 
     private var songs: ArrayList<Song> = ArrayList()
     private lateinit var songAdapter: SongAdapter
     private lateinit var layoutManager: RecyclerView.LayoutManager
 
-    private var musicService: MusicService ?= null
+    private var musicController: MusicController ?= null
+    private var musicService: MusicService?= null
     private var playIntent: Intent ?= null
     private var musicBound: Boolean = false
 
@@ -49,6 +48,7 @@ class MainActivity : AppCompatActivity(), SongAdapter.ItemClicked {
 
         checkPermission()
         loadSongs()
+        setMusicController()
 
         layoutManager = LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false)
         songList_RecyclerView.layoutManager = layoutManager
@@ -102,6 +102,80 @@ class MainActivity : AppCompatActivity(), SongAdapter.ItemClicked {
     override fun onItemClicked(index: Int) {
         musicService!!.setSong(index)
         musicService!!.playSong()
+    }
+
+    private fun setMusicController() {
+        musicController = MusicController(this)
+
+        musicController!!.setPrevNextListeners({
+            playNext()
+        }, {
+            playPrev()
+        })
+
+        musicController!!.setMediaPlayer(this)
+        musicController!!.setAnchorView(songList_RecyclerView)
+        musicController!!.isEnabled = true
+    }
+
+    private fun playPrev() {
+        musicService!!.playPrev()
+        musicController!!.show(0)
+    }
+
+    private fun playNext() {
+        musicService!!.playNext()
+        musicController!!.show(0)
+    }
+
+    override fun isPlaying(): Boolean {
+        return if (musicService != null && musicBound) {
+            musicService!!.isPlaying()
+        } else return false
+    }
+
+    override fun canSeekForward(): Boolean {
+        return true
+    }
+
+    override fun getDuration(): Int {
+        return if (musicService != null && musicBound && musicService!!.isPlaying()) {
+            musicService!!.getDuration()
+        } else return 0
+    }
+
+    override fun pause() {
+        musicService!!.pausePlayer()
+    }
+
+    override fun getBufferPercentage(): Int {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun seekTo(pos: Int) {
+        musicService!!.seek(pos)
+    }
+
+    override fun getCurrentPosition(): Int {
+        return if (musicService != null && musicBound && musicService!!.isPlaying()) {
+            musicService!!.getPosition()
+        } else 0
+    }
+
+    override fun canSeekBackward(): Boolean {
+        return true
+    }
+
+    override fun start() {
+        musicService!!.go()
+    }
+
+    override fun getAudioSessionId(): Int {
+        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+    }
+
+    override fun canPause(): Boolean {
+        return true
     }
 
     private fun checkPermission() {

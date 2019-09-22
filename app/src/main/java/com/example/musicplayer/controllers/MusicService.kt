@@ -1,4 +1,4 @@
-package com.example.musicplayer.model
+package com.example.musicplayer.controllers
 
 import android.app.Service
 import android.content.Intent
@@ -8,6 +8,7 @@ import android.os.IBinder
 import android.os.PowerManager
 import android.os.Binder
 import android.util.Log
+import com.example.musicplayer.model.Song
 import java.lang.Exception
 
 
@@ -61,6 +62,46 @@ class MusicService : Service(),
         }
 
         mediaPlayer.prepareAsync()
+    }
+
+    fun playPrev() {
+        songPosition.dec()
+        if (songPosition < 0) {
+            songPosition = songs.size - 1
+        }
+        playSong()
+    }
+
+    fun playNext() {
+        songPosition.inc()
+        if (songPosition > songs.size) {
+            songPosition = 0
+        }
+        playSong()
+    }
+
+    fun getPosition(): Int {
+        return mediaPlayer.currentPosition
+    }
+
+    fun getDuration(): Int {
+        return mediaPlayer.duration
+    }
+
+    fun isPlaying(): Boolean {
+        return mediaPlayer.isPlaying
+    }
+
+    fun pausePlayer() {
+        mediaPlayer.pause()
+    }
+
+    fun seek(position: Int) {
+        mediaPlayer.seekTo(position)
+    }
+
+    fun go() {
+        mediaPlayer.start()
     }
 
     inner class MusicBinder : Binder() {
