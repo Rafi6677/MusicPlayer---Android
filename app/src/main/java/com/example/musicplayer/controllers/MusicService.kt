@@ -1,5 +1,7 @@
 package com.example.musicplayer.controllers
 
+import android.app.Notification
+import android.app.PendingIntent
 import android.app.Service
 import android.content.Intent
 import android.media.AudioManager
@@ -8,6 +10,8 @@ import android.os.IBinder
 import android.os.PowerManager
 import android.os.Binder
 import android.util.Log
+import com.example.musicplayer.R
+import com.example.musicplayer.activities.MainActivity
 import com.example.musicplayer.model.Song
 import java.lang.Exception
 
@@ -20,6 +24,8 @@ class MusicService : Service(),
     private lateinit var mediaPlayer: MediaPlayer
     private lateinit var songs: ArrayList<Song>
     private var songPosition: Int = 0
+    private var songTitle: String = ""
+    private val NOTIFY_ID = 1
 
     private val musicBind = MusicBinder()
 
@@ -54,6 +60,8 @@ class MusicService : Service(),
 
         val playSong: Song = songs[songPosition]
         val url: String = playSong.url
+
+        songTitle = playSong.title
 
         try {
             mediaPlayer.setDataSource(url)
@@ -122,6 +130,24 @@ class MusicService : Service(),
 
     override fun onPrepared(mp: MediaPlayer) {
         mp.start()
+
+        val notificationIntent = Intent(this, MainActivity::class.java)
+        notificationIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+
+        val pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT)
+
+        val builder = Notification.Builder(this)
+
+        builder.setContentIntent(pendingIntent)
+            .setSmallIcon(R.drawable.ic_play)
+            .setTicker(songTitle)
+            .setOngoing(true)
+            .setContentTitle("Playing")
+        .setContentText(songTitle)
+
+        val notification = builder.build()
+
+        startForeground(NOTIFY_ID, notification)
     }
 
     override fun onError(mp: MediaPlayer?, what: Int, extra: Int): Boolean {
@@ -130,5 +156,9 @@ class MusicService : Service(),
 
     override fun onCompletion(mp: MediaPlayer?) {
 
+    }
+
+    override fun onDestroy() {
+        stopForeground(true)
     }
 }

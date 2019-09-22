@@ -128,6 +128,11 @@ class MainActivity : AppCompatActivity(), MediaController.MediaPlayerControl, So
         musicController!!.show(0)
     }
 
+
+    /*
+    * MediaPlayerControl functions
+    * */
+
     override fun isPlaying(): Boolean {
         return if (musicService != null && musicBound) {
             musicService!!.isPlaying()
@@ -177,6 +182,8 @@ class MainActivity : AppCompatActivity(), MediaController.MediaPlayerControl, So
     override fun canPause(): Boolean {
         return true
     }
+
+
 
     private fun checkPermission() {
         if (Build.VERSION.SDK_INT >= 23) {
