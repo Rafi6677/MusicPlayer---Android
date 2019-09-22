@@ -14,6 +14,8 @@ import com.example.musicplayer.R
 import com.example.musicplayer.activities.MainActivity
 import com.example.musicplayer.model.Song
 import java.lang.Exception
+import java.util.*
+import kotlin.collections.ArrayList
 
 
 class MusicService : Service(),
@@ -29,11 +31,15 @@ class MusicService : Service(),
 
     private val musicBind = MusicBinder()
 
+    private var shuffle: Boolean = false
+    private lateinit var rand: Random
+
     override fun onCreate() {
         super.onCreate()
 
         songPosition = 0
         mediaPlayer = MediaPlayer()
+        rand = Random()
 
         initMediaPlayer()
     }
@@ -81,11 +87,26 @@ class MusicService : Service(),
     }
 
     fun playNext() {
-        songPosition.inc()
-        if (songPosition > songs.size) {
-            songPosition = 0
+        if (shuffle) {
+            var newSong: Int = songPosition
+
+            while (newSong == songPosition) {
+                newSong = rand.nextInt(songs.size)
+            }
+
+            songPosition = newSong
+        } else {
+            songPosition.inc()
+            if (songPosition > songs.size) {
+                songPosition = 0
+            }
         }
+
         playSong()
+    }
+
+    fun setShuffle() {
+        shuffle = !shuffle
     }
 
     fun getPosition(): Int {
